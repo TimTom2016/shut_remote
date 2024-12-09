@@ -88,6 +88,9 @@ fn HomePage() -> impl IntoView {
 #[server]
 pub async fn shutdown() -> Result<(), ServerFnError> {
     println!("Shutdown computer");
+    #[cfg(target_os = "windows")]
+    system_shutdown::force_shutdown().unwrap();
+    #[cfg(not(target_os = "windows"))]
     system_shutdown::shutdown().unwrap();
     Ok(())
 }

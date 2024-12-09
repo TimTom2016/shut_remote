@@ -38,9 +38,9 @@ jobs:
 
       - name: Prepare release package
         run: |
-          mkdir release-package
+          mkdir -p release-package/target
           cp target/release/shut_remote release-package/
-          cp -r target/site release-package/
+          cp -r target/site release-package/target/
           tar -czf shut_remote-linux.tar.gz -C release-package .
 
       - name: Create Release
@@ -87,9 +87,9 @@ jobs:
       - name: Prepare release package
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Path release-package
+          New-Item -ItemType Directory -Path release-package\target -Force
           Copy-Item target\release\shut_remote.exe release-package\
-          Copy-Item target\site release-package\site -Recurse
+          Copy-Item target\site release-package\target\site -Recurse
           Compress-Archive -Path release-package\* -DestinationPath shut_remote-windows.zip
 
       - name: Upload Release Asset

@@ -17,13 +17,10 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
+          override: true
 
       - name: Install cargo-binstall
-        run: |
-          wget https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz
-          tar -xvf cargo-binstall-x86_64-unknown-linux-musl.tgz
-          mkdir -p /usr/local/cargo/bin
-          cp cargo-binstall /usr/local/cargo/bin
+        uses: taiki-e/install-action@cargo-binstall
 
       - name: Install cargo-leptos
         run: |
@@ -41,13 +38,16 @@ jobs:
         run: |
           tar -czf app-linux.tar.gz -C app .
 
-      - name: Upload Linux Release Asset
-        uses: actions/upload-release-asset@v1
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./app-linux.tar.gz
-          asset_name: app-linux.tar.gz
-          asset_content_type: application/gzip
+          files: |
+            app-linux.tar.gz
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-windows:
     runs-on: windows-latest
@@ -62,15 +62,10 @@ jobs:
           profile: minimal
           toolchain: nightly
           target: x86_64-pc-windows-msvc
+          override: true
 
       - name: Install cargo-binstall
-        env:
-          CARGO_HOME: ${{ runner.temp }}/cargo
-        run: |
-          Invoke-WebRequest -Uri https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-pc-windows-msvc.zip -OutFile cargo-binstall.zip
-          Expand-Archive cargo-binstall.zip -DestinationPath .
-          mkdir $env:CARGO_HOME\\bin
-          Copy-Item .\\cargo-binstall.exe $env:CARGO_HOME\\bin\\
+        uses: taiki-e/install-action@cargo-binstall
 
       - name: Install cargo-leptos
         run: |
@@ -86,12 +81,14 @@ jobs:
 
       - name: Prepare app/ directory for release
         run: |
-          Compress-Archive -Path app\\* -DestinationPath app-windows.zip
+          Compress-Archive -Path app\* -DestinationPath app-windows.zip
 
-      - name: Upload Windows Release Asset
-        uses: actions/upload-release-asset@v1
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./app-windows.zip
-          asset_name: app-windows.zip
-          asset_content_type: application/zip
+          files: |
+            app-windows.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

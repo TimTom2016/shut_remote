@@ -34,16 +34,19 @@ jobs:
         run: |
           cargo leptos build --release -vv
 
-      - name: Prepare app/ directory for release
+      - name: Prepare release package
         run: |
-          tar -czf app-linux.tar.gz -C app .
+          mkdir release-package
+          cp target/release/shut_remote release-package/
+          cp -r target/site release-package/
+          tar -czf shut_remote-linux.tar.gz -C release-package .
 
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            app-linux.tar.gz
+            shut_remote-linux.tar.gz
           draft: false
           prerelease: false
         env:
@@ -79,15 +82,19 @@ jobs:
         run: |
           cargo leptos build --release -vv
 
-      - name: Prepare app/ directory for release
+      - name: Prepare release package
+        shell: pwsh
         run: |
-          Compress-Archive -Path app\* -DestinationPath app-windows.zip
+          New-Item -ItemType Directory -Path release-package
+          Copy-Item target\release\shut_remote.exe release-package\
+          Copy-Item target\site release-package\site -Recurse
+          Compress-Archive -Path release-package\* -DestinationPath shut_remote-windows.zip
 
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            app-windows.zip
+            shut_remote-windows.zip
           draft: false
           prerelease: false
         env:

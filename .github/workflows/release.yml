@@ -22,6 +22,7 @@ jobs:
         run: |
           wget https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz
           tar -xvf cargo-binstall-x86_64-unknown-linux-musl.tgz
+          mkdir -p /usr/local/cargo/bin
           cp cargo-binstall /usr/local/cargo/bin
 
       - name: Install cargo-leptos
@@ -40,21 +41,10 @@ jobs:
         run: |
           tar -czf app-linux.tar.gz -C app .
 
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          draft: false
-          prerelease: false
-
       - name: Upload Linux Release Asset
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: ${{ github.event.release.upload_url }}
           asset_path: ./app-linux.tar.gz
           asset_name: app-linux.tar.gz
           asset_content_type: application/gzip
@@ -74,10 +64,13 @@ jobs:
           target: x86_64-pc-windows-msvc
 
       - name: Install cargo-binstall
+        env:
+          CARGO_HOME: ${{ runner.temp }}/cargo
         run: |
           Invoke-WebRequest -Uri https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-pc-windows-msvc.zip -OutFile cargo-binstall.zip
           Expand-Archive cargo-binstall.zip -DestinationPath .
-          Copy-Item .\cargo-binstall.exe $env:CARGO_HOME\bin\
+          mkdir $env:CARGO_HOME\\bin
+          Copy-Item .\\cargo-binstall.exe $env:CARGO_HOME\\bin\\
 
       - name: Install cargo-leptos
         run: |
@@ -93,7 +86,7 @@ jobs:
 
       - name: Prepare app/ directory for release
         run: |
-          Compress-Archive -Path app\* -DestinationPath app-windows.zip
+          Compress-Archive -Path app\\* -DestinationPath app-windows.zip
 
       - name: Upload Windows Release Asset
         uses: actions/upload-release-asset@v1
